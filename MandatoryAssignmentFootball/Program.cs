@@ -204,3 +204,214 @@ class FootballsApplication
             Console.WriteLine($"An error occurred while writing total points and goals to {outputFilePath}: {ex.Message}");
         }
     }
+
+    static void ReadFirstLine()
+    {
+        // Define the path to your CSV file
+        string resultFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\resultsPromotion.CSV";
+
+
+        // Read the first 5 lines from the CSV file
+        ReadFirstLine(resultFilePath);
+    }
+
+    static void ReadFirstLine(string resultFilePath)
+    {
+        try
+        {
+            using (StreamReader reader = new StreamReader(resultFilePath))
+            {
+
+                int linesToRead = 2;
+                int linesRead = 0;
+
+                while (linesRead < linesToRead)
+                {
+                    string line = reader.ReadLine();
+
+                    if (line == null)
+                        break;
+
+                    // Skip the header line (first line)
+                    if (linesRead == 0)
+                    {
+                        linesRead++;
+                        continue;
+                    }
+
+                    Console.WriteLine(line);
+                    linesRead++;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred: " + ex.Message);
+        }
+    }
+
+    static void ReadFirstSixLines()
+    {
+        // Define the path to your CSV file
+        string resultFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\results.CSV";
+
+
+        // Read the first 5 lines from the CSV file
+        ReadFirst6Lines(resultFilePath);
+    }
+
+    static void ReadFirst6Lines(string resultFilePath)
+    {
+        try
+        {
+            using (StreamReader reader = new StreamReader(resultFilePath))
+            {
+
+                int linesToRead = 7;
+                int linesRead = 0;
+
+                while (linesRead < linesToRead)
+                {
+                    string line = reader.ReadLine();
+
+                    if (line == null)
+                        break;
+
+                    // Skip the header line (first line)
+                    if (linesRead == 0)
+                    {
+                        linesRead++;
+                        continue;
+                    }
+
+                    Console.WriteLine(line);
+                    linesRead++;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred: " + ex.Message);
+        }
+    }
+
+
+    static void FootballTop()
+    {
+        string outputFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\resultsPromotion.CSV"; // The path to the output "ResultsPromotion" CSV file
+        string inputDirectoryPath = Directory.GetCurrentDirectory() + "\\CSV_files\\CSV_rounds\\"; // Replace with your directory path
+
+
+        // Ensure the input directory exists
+        if (!Directory.Exists(inputDirectoryPath))
+        {
+            throw new Exception($"Input directory '{inputDirectoryPath}' not found.");
+        }
+
+        // Initialize the output file (create or clear it)
+        File.WriteAllText(outputFilePath, "");
+
+        // Dictionary to store team names and their total points
+        Dictionary<string, int> teamGoals = new Dictionary<string, int>();
+        Dictionary<string, int> teamPoints = new Dictionary<string, int>();
+        Dictionary<string, int> goalsAgainst = new Dictionary<string, int>();
+        Dictionary<string, int> matchesPlayed = new Dictionary<string, int>();
+        Dictionary<string, int> matchesWon = new Dictionary<string, int>();
+        Dictionary<string, int> matchesLost = new Dictionary<string, int>();
+        Dictionary<string, int> matchesTied = new Dictionary<string, int>();
+
+        var roundsProcessed = 0;
+
+        for (int roundNumber = 23; roundNumber <= 32; roundNumber++)
+        {
+            string roundFileName = $"round-{roundNumber:00}.CSV"; // Formatted file name
+            string roundFilePath = Path.Combine(inputDirectoryPath, roundFileName);
+
+            if (File.Exists(roundFilePath))
+            {
+                //Console.WriteLine($"Processing {roundFileName}...");
+                roundsProcessed++;
+                foreach (var round in CSV_to_GameResult(roundFilePath))
+                {
+
+                    // Ensure that the homeTeam exists in the dictionary
+                    if (teamGoals.ContainsKey(round.homeTeam) == false && teamPoints.ContainsKey(round.homeTeam) == false && goalsAgainst.ContainsKey(round.homeTeam) == false
+                        && matchesPlayed.ContainsKey(round.homeTeam) == false &&
+                        matchesWon.ContainsKey(round.homeTeam) == false && matchesLost.ContainsKey(round.homeTeam) == false &&
+                        matchesTied.ContainsKey(round.homeTeam) == false)
+                    {
+                        teamGoals[round.homeTeam] = 0;
+                        teamPoints[round.homeTeam] = 0;
+                        goalsAgainst[round.homeTeam] = 0;
+                        matchesPlayed[round.homeTeam] = 0;
+                        matchesWon[round.homeTeam] = 0;
+                        matchesLost[round.homeTeam] = 0;
+                        matchesTied[round.homeTeam] = 0;
+                    }
+
+                    // Ensure that the awayTeam exists in the dictionary
+                    if (teamGoals.ContainsKey(round.awayTeam) == false && teamPoints.ContainsKey(round.awayTeam) == false && goalsAgainst.ContainsKey(round.awayTeam) == false
+                        && matchesPlayed.ContainsKey(round.awayTeam) == false && matchesPlayed.ContainsKey(round.awayTeam) == false && matchesWon.ContainsKey(round.awayTeam) == false
+                        && matchesLost.ContainsKey(round.awayTeam) == false && matchesTied.ContainsKey(round.awayTeam) == false)
+                    {
+                        teamGoals[round.awayTeam] = 0;
+                        teamPoints[round.awayTeam] = 0;
+                        goalsAgainst[round.awayTeam] = 0;
+                        matchesPlayed[round.awayTeam] = 0;
+                        matchesWon[round.awayTeam] = 0;
+                        matchesLost[round.awayTeam] = 0;
+                        matchesTied[round.awayTeam] = 0;
+                    }
+
+                    teamGoals[round.homeTeam] += round.homeScore;
+                    teamGoals[round.awayTeam] += round.awayScore;
+
+                    teamPoints[round.homeTeam] += round.homePointsForMatch;
+                    teamPoints[round.awayTeam] += round.awayPointsForMatch;
+
+                    goalsAgainst[round.homeTeam] += round.awayScore;
+                    goalsAgainst[round.awayTeam] += round.homeScore;
+
+                    matchesPlayed[round.homeTeam]++;
+                    matchesPlayed[round.awayTeam]++;
+
+                    if (round.homePointsForMatch == 3)
+                    {
+                        matchesWon[round.homeTeam]++;
+                        matchesLost[round.awayTeam]++;
+                    }
+                    else if (round.awayPointsForMatch == 3)
+                    {
+                        matchesWon[round.awayTeam]++;
+                        matchesLost[round.homeTeam]++;
+                    }
+                    else
+                    {
+                        matchesTied[round.homeTeam]++;
+                        matchesTied[round.awayTeam]++;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception($"{roundFileName} not found.");
+            }
+        }
+
+        // Write the total points for each team to the "Results.csv" file
+        Console.WriteLine("");
+        Console.WriteLine("Top six teams rounds:");
+        WriteTotalsToOutput(teamPoints, teamGoals, goalsAgainst, matchesPlayed, matchesWon, matchesLost, matchesTied, outputFilePath);
+
+        Console.WriteLine("");
+
+        Console.WriteLine($"Processed {roundsProcessed} matches");
+        Console.WriteLine("");
+
+        Console.WriteLine("Winner:");
+        ReadFirstLine();
+
+    }
+
+
+}
