@@ -295,6 +295,73 @@ class FootballsApplication
         }
     }
 
+static void LastLines()
+    {
+        string resultFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\results.CSV";
+        // Read the last 6 lines from the CSV file
+        List<string> last5Lines = ReadLastNLines(resultFilePath, 6);
+
+        // Process the CSV data as needed
+        foreach (string line in last5Lines)
+        {
+            string[] fields = line.Split(','); // Assuming CSV is comma-separated
+
+            // Process the fields as needed
+            foreach (string field in fields)
+            {
+                Console.Write(field + " ");
+            }
+
+            Console.WriteLine(); // Add a new line between CSV rows
+        }
+    }
+
+ static List<string> ReadLastNLines(string resultFilePath, int n)
+    {
+        List<string> lastNLines    = new List<string>();
+
+        using (StreamReader reader = new StreamReader(resultFilePath))
+        {
+            string line;
+            Queue<string> linesQueue = new Queue<string>(n);
+
+            // Read and enqueue lines until we have n lines or reach the end of the file
+            while ((line = reader.ReadLine()) != null)
+            {
+                linesQueue.Enqueue(line);
+                if (linesQueue.Count > n)
+                {
+                    linesQueue.Dequeue();
+                }
+            }
+
+            // Add the last n lines to the result list
+            lastNLines.AddRange(linesQueue);
+        }
+
+        return lastNLines;
+    }
+ 
+ static void LastLine()
+    {
+        string resultFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\resultsDemotion.CSV";
+        // Read the last 5 lines from the CSV file
+        List<string> last5Lines = ReadLastNLines(resultFilePath, 1);
+
+        // Process the CSV data as needed
+        foreach (string line in last5Lines)
+        {
+            string[] fields = line.Split(','); // Assuming CSV is comma-separated
+
+            // Process the fields as needed
+            foreach (string field in fields)
+            {
+                Console.Write(field + " ");
+            }
+
+            Console.WriteLine(); // Add a new line between CSV rows
+        }
+    }
 
     static void FootballTop()
     {
@@ -414,4 +481,119 @@ class FootballsApplication
     }
 
 
+static void FootballBottom()
+    {
+        string outputFilePath = Directory.GetCurrentDirectory() + "\\CSV_files\\resultsDemotion.CSV"; // The path to the output "Results" CSV file
+        string inputDirectoryPath = Directory.GetCurrentDirectory() + "\\CSV_files\\CSV_rounds\\"; // Replace with your directory path
+
+
+        // Ensure the input directory exists
+        if (!Directory.Exists(inputDirectoryPath))
+        {
+            throw new Exception($"Input directory '{inputDirectoryPath}' not found.");
+        }
+
+        // Initialize the output file (create or clear it)
+        File.WriteAllText(outputFilePath, "");
+
+        // Dictionary to store team names and their total points
+        Dictionary<string, int> teamGoals     = new Dictionary<string, int>();
+        Dictionary<string, int> teamPoints    = new Dictionary<string, int>();
+        Dictionary<string, int> goalsAgainst  = new Dictionary<string, int>();
+        Dictionary<string, int> matchesPlayed = new Dictionary<string, int>();
+        Dictionary<string, int> matchesWon    = new Dictionary<string, int>();
+        Dictionary<string, int> matchesLost   = new Dictionary<string, int>();
+        Dictionary<string, int> matchesTied   = new Dictionary<string, int>();
+
+        var roundsProcessed  = 0;
+
+        for (int roundNumber = 33; roundNumber <= 42; roundNumber++)
+        {
+            string roundFileName = $"round-{roundNumber:00}.CSV"; // Formatted file name
+            string roundFilePath = Path.Combine(inputDirectoryPath, roundFileName);
+
+            if (File.Exists(roundFilePath))
+            {
+                //Console.WriteLine($"Processing {roundFileName}...");
+                roundsProcessed++;
+                foreach (var round in CSV_to_GameResult(roundFilePath))
+                {
+
+                    // Ensure that the homeTeam exists in the dictionary
+                    if (teamGoals.ContainsKey(round.homeTeam) == false && teamPoints.ContainsKey(round.homeTeam) == false && goalsAgainst.ContainsKey(round.homeTeam) == false
+                        && matchesPlayed.ContainsKey(round.homeTeam) == false &&
+                        matchesWon.ContainsKey(round.homeTeam) == false && matchesLost.ContainsKey(round.homeTeam) == false &&
+                        matchesTied.ContainsKey(round.homeTeam) == false)
+                    {
+                        teamGoals[round.homeTeam]     = 0;
+                        teamPoints[round.homeTeam]    = 0;
+                        goalsAgainst[round.homeTeam]  = 0;
+                        matchesPlayed[round.homeTeam] = 0;
+                        matchesWon[round.homeTeam]    = 0;
+                        matchesLost[round.homeTeam]   = 0;
+                        matchesTied[round.homeTeam]   = 0;
+                    }
+
+                    // Ensure that the awayTeam exists in the dictionary
+                    if (teamGoals.ContainsKey(round.awayTeam) == false && teamPoints.ContainsKey(round.awayTeam) == false && goalsAgainst.ContainsKey(round.awayTeam) == false
+                        && matchesPlayed.ContainsKey(round.awayTeam) == false && matchesWon.ContainsKey(round.awayTeam) == false
+                        && matchesLost.ContainsKey(round.awayTeam) == false && matchesTied.ContainsKey(round.awayTeam) == false)
+                    {
+                        teamGoals[round.awayTeam]     = 0;
+                        teamPoints[round.awayTeam]    = 0;
+                        goalsAgainst[round.awayTeam]  = 0;
+                        matchesPlayed[round.awayTeam] = 0;
+                        matchesWon[round.awayTeam]    = 0;
+                        matchesLost[round.awayTeam]   = 0;
+                        matchesTied[round.awayTeam]   = 0;
+                    }
+
+                    teamGoals[round.homeTeam]         += round.homeScore;
+                    teamGoals[round.awayTeam]         += round.awayScore;
+
+                    teamPoints[round.homeTeam]        += round.homePointsForMatch;
+                    teamPoints[round.awayTeam]        += round.awayPointsForMatch;
+
+                    goalsAgainst[round.homeTeam]      += round.awayScore;
+                    goalsAgainst[round.awayTeam]      += round.homeScore;
+
+                    matchesPlayed[round.homeTeam]     ++;
+                    matchesPlayed[round.awayTeam]     ++;
+
+                    if (round.homePointsForMatch      == 3)
+                    {
+                        matchesWon[round.homeTeam]    ++;
+                        matchesLost[round.awayTeam]   ++;
+                    }
+                    else if (round.awayPointsForMatch == 3)
+                    {
+                        matchesWon[round.awayTeam]    ++;
+                        matchesLost[round.homeTeam]   ++;
+                    }
+                    else
+                    {
+                        matchesTied[round.homeTeam]   ++;
+                        matchesTied[round.awayTeam]   ++;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception($"{roundFileName} not found.");
+            }
+        }
+
+        // Write the total points for each team to the "Results.csv" file
+        Console.WriteLine("");
+        Console.WriteLine("Bottom six teams rounds:");
+        WriteTotalsToOutput(teamPoints, teamGoals, goalsAgainst, matchesPlayed, matchesWon, matchesLost, matchesTied, outputFilePath);
+
+        Console.WriteLine("");
+
+        Console.WriteLine($"Processed {roundsProcessed} matches");
+        Console.WriteLine("");
+
+        Console.WriteLine("Team to be demoted:");
+        LastLine();
+    }
 }
